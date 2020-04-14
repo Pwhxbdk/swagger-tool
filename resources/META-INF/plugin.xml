@@ -1,17 +1,21 @@
 <idea-plugin>
-  <id>com.your.company.unique.plugin.id</id>
-  <name>Plugin display name here</name>
-  <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+  <id>com.pwhxbdk.plugin.swagger.tool</id>
+  <name>Swagger Tools</name>
+  <version>1.0.1</version>
+  <vendor>Pwhxbdk</vendor>
 
   <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+      IntelliJ Generate Annotation plugin.<br>
+      <a href="https://github.com/Pwhxbdk/swagger-tool">GitHub</a><br>
+      根据类属性/方法的doc注释生成swagger注解。<br>
+      使用说明请前往github查看...<br>
+      Generate swagger annotations based on doc comments of class field / methods.<br>
+      For instructions, please go to github...
     ]]></description>
 
   <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+      Head over to GitHub to see the latest change notes and learn more about this plugin.
+      Thanks for dropping by.
     ]]>
   </change-notes>
 

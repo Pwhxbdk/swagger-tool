@@ -4,7 +4,6 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
@@ -27,14 +26,19 @@ public class SwaggerTool extends AnAction {
 
     private static Project project = null;
     private static PsiFile psiFile = null;
-    private static String controllerAnnotation = "org.springframework.stereotype.Controller";
-    private static String restControllerAnnotation = "org.springframework.web.bind.annotation.RestController";
-    private static String requestMappingAnnotation = "org.springframework.web.bind.annotation.RequestMapping";
+    PsiElementFactory elementFactory = null;
+    private static final String MAPPING_VALUE = "value";
+    private static final String MAPPING_METHOD = "method";
+    private static final String REQUEST_MAPPING_ANNOTATION = "org.springframework.web.bind.annotation.RequestMapping";
+    private static final String POST_MAPPING_ANNOTATION = "org.springframework.web.bind.annotation.PostMapping";
+    private static final String GET_MAPPING_ANNOTATION = "org.springframework.web.bind.annotation.GetMapping";
+    private static final String DELETE_MAPPING_ANNOTATION = "org.springframework.web.bind.annotation.DeleteMapping";
+    private static final String PATCH_MAPPING_ANNOTATION = "org.springframework.web.bind.annotation.PatchMapping";
+    private static final String PUT_MAPPING_ANNOTATION = "org.springframework.web.bind.annotation.PutMapping";
     private static final String REQUEST_PARAM_TEXT = "org.springframework.web.bind.annotation.RequestParam";
     private static final String REQUEST_HEADER_TEXT = "org.springframework.web.bind.annotation.RequestHeader";
     private static final String PATH_VARIABLE_TEXT = "org.springframework.web.bind.annotation.PathVariable";
     private static final String REQUEST_BODY_TEXT = "org.springframework.web.bind.annotation.RequestBody";
-    PsiElementFactory elementFactory = null;
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
@@ -44,12 +48,20 @@ public class SwaggerTool extends AnAction {
         // 获取当前文件对象
         Editor editor = anActionEvent.getData(PlatformDataKeys.EDITOR);
         psiFile = PsiUtilBase.getPsiFileInEditor(editor, project);
-        System.out.println(editor.getSelectionModel().getSelectedText());
+        String selectionText = editor.getSelectionModel().getSelectedText();
+        boolean selection = false;
+        if (StringUtils.isNotEmpty(selectionText)) {
+            selection = true;
+        }
         // 遍历当前对象的所有属性
         for (PsiElement psiElement : psiFile.getChildren()) {
             if (psiElement instanceof PsiClass){
                 PsiClass psiClass = (PsiClass) psiElement;
                 boolean isController = this.isController(psiClass);
+                if (selection) {
+                    this.generateSelection(psiClass, selectionText, isController);
+                    break;
+                }
                 // 获取注释
                 this.generateClassAnnotation(psiClass,isController);
                 if (isController) {
@@ -75,9 +87,36 @@ public class SwaggerTool extends AnAction {
      * @param psiClass 类元素
      * @return boolean
      */
+    private void generateSelection(PsiClass psiClass, String selectionText, boolean isController) {
+        if (Objects.equals(selectionText, psiClass.getName())) {
+            this.generateClassAnnotation(psiClass,isController);
+        }
+        PsiMethod[] methods = psiClass.getMethods();
+        for (PsiMethod psiMethod : methods) {
+            if (Objects.equals(selectionText, psiMethod.getName())) {
+                this.generateMethodAnnotation(psiMethod);
+                return;
+            }
+        }
+        PsiField[] field = psiClass.getAllFields();
+        for (PsiField psiField : field) {
+            if (Objects.equals(selectionText, psiField.getName())) {
+                this.generateFieldAnnotation(psiField);
+                return;
+            }
+        }
+    }
+
+    /**
+     * 类是否为controller
+     * @param psiClass 类元素
+     * @return boolean
+     */
     private boolean isController(PsiClass psiClass) {
         PsiAnnotation[] psiAnnotations = psiClass.getModifierList().getAnnotations();
         for (PsiAnnotation psiAnnotation : psiAnnotations) {
+            String controllerAnnotation = "org.springframework.stereotype.Controller";
+            String restControllerAnnotation = "org.springframework.web.bind.annotation.RestController";
             if (controllerAnnotation.equals(psiAnnotation.getQualifiedName())
                     || restControllerAnnotation.equals(psiAnnotation.getQualifiedName())) {
                 // controller
@@ -93,14 +132,36 @@ public class SwaggerTool extends AnAction {
      * @param attributeName 属性名
      * @return String 属性值
      */
-    private String getRequestMappingAttribute(PsiAnnotation[] psiAnnotations, String attributeName) {
+    private String getMappingAttribute(PsiAnnotation[] psiAnnotations, String attributeName) {
         for (PsiAnnotation psiAnnotation : psiAnnotations) {
-            if (requestMappingAnnotation.equals(psiAnnotation.getQualifiedName())) {
-                PsiAnnotationMemberValue psiAnnotationMemberValue = psiAnnotation.findDeclaredAttributeValue(attributeName);
-                return psiAnnotationMemberValue.getText();
+            switch (Objects.requireNonNull(psiAnnotation.getQualifiedName())) {
+                case REQUEST_MAPPING_ANNOTATION:
+                    return getAttribute(psiAnnotation, attributeName,null);
+                case POST_MAPPING_ANNOTATION:
+                    return getAttribute(psiAnnotation, attributeName,"post");
+                case GET_MAPPING_ANNOTATION:
+                    return getAttribute(psiAnnotation, attributeName,"get");
+                case DELETE_MAPPING_ANNOTATION:
+                    return getAttribute(psiAnnotation, attributeName,"delete");
+                case PATCH_MAPPING_ANNOTATION:
+                    return getAttribute(psiAnnotation, attributeName,"patch");
+                case PUT_MAPPING_ANNOTATION:
+                    return getAttribute(psiAnnotation, attributeName,"put");
+                default:break;
             }
         }
         return "";
+    }
+
+    private String getAttribute(PsiAnnotation psiAnnotation, String attributeName, String method) {
+        if (Objects.equals(attributeName,MAPPING_METHOD) && StringUtils.isNotEmpty(method)) {
+            return method;
+        }
+        PsiAnnotationMemberValue psiAnnotationMemberValue = psiAnnotation.findDeclaredAttributeValue(attributeName);
+        if (Objects.isNull(psiAnnotationMemberValue)) {
+            return "";
+        }
+        return psiAnnotationMemberValue.getText();
     }
 
     /**
@@ -109,9 +170,10 @@ public class SwaggerTool extends AnAction {
      * @param isController 是否为controller
      */
     private void generateClassAnnotation(PsiClass psiClass, boolean isController){
+        PsiComment classComment = null;
         for (PsiElement tmpEle : psiClass.getChildren()) {
             if (tmpEle instanceof PsiComment){
-                PsiComment classComment = (PsiComment) tmpEle;
+                classComment = (PsiComment) tmpEle;
                 // 注释的内容
                 String tmpText = classComment.getText();
                 String commentDesc = CommentUtils.getCommentDesc(tmpText);
@@ -121,7 +183,7 @@ public class SwaggerTool extends AnAction {
                 if (isController) {
                     annotation = "Api";
                     qualifiedName = "io.swagger.annotations.Api";
-                    String fieldValue = this.getRequestMappingAttribute(psiClass.getModifierList().getAnnotations(),"value");
+                    String fieldValue = this.getMappingAttribute(psiClass.getModifierList().getAnnotations(),MAPPING_VALUE);
                     annotationFromText = String.format("@%s(value = %s, tags = {\"%s\"})",annotation,fieldValue,commentDesc);
                 } else {
                     annotation = "ApiModel";
@@ -131,6 +193,22 @@ public class SwaggerTool extends AnAction {
                 this.doWrite(annotation, qualifiedName, annotationFromText, psiClass);
             }
         }
+        if (Objects.isNull(classComment)) {
+            String annotationFromText;
+            String annotation;
+            String qualifiedName;
+            if (isController) {
+                annotation = "Api";
+                qualifiedName = "io.swagger.annotations.Api";
+                String fieldValue = this.getMappingAttribute(psiClass.getModifierList().getAnnotations(),MAPPING_VALUE);
+                annotationFromText = String.format("@%s(value = %s)",annotation,fieldValue);
+            } else {
+                annotation = "ApiModel";
+                qualifiedName = "io.swagger.annotations.ApiModel";
+                annotationFromText = String.format("@%s", annotation);
+            }
+            this.doWrite(annotation, qualifiedName, annotationFromText, psiClass);
+        }
     }
 
     /**
@@ -139,7 +217,7 @@ public class SwaggerTool extends AnAction {
      */
     private void generateMethodAnnotation(PsiMethod psiMethod){
         PsiAnnotation[] psiAnnotations = psiMethod.getModifierList().getAnnotations();
-        String methodValue = this.getRequestMappingAttribute(psiAnnotations,"method");
+        String methodValue = this.getMappingAttribute(psiAnnotations,MAPPING_METHOD);
         if (StringUtils.isNotEmpty(methodValue)) {
             methodValue = methodValue.substring(methodValue.indexOf(".")+1);
         }
@@ -153,7 +231,7 @@ public class SwaggerTool extends AnAction {
             if (StringUtils.isEmpty(dataType)) {
                 continue;
             }
-            String paramType = "";
+            String paramType = "query";
             if (Objects.equals(dataType,"file")) {
                 paramType = "form";
             }
@@ -220,15 +298,19 @@ public class SwaggerTool extends AnAction {
      * @param psiField 类属性元素
      */
     private void generateFieldAnnotation(PsiField psiField){
+        PsiComment classComment = null;
         for (PsiElement tmpEle : psiField.getChildren()) {
             if (tmpEle instanceof PsiComment) {
-                PsiComment classComment = (PsiComment) tmpEle;
+                classComment = (PsiComment) tmpEle;
                 // 注释的内容
                 String tmpText = classComment.getText();
                 String commentDesc = CommentUtils.getCommentDesc(tmpText);
                 String apiModelPropertyText = String.format("@ApiModelProperty(value=\"%s\")",commentDesc);
                 this.doWrite("ApiModelProperty", "io.swagger.annotations.ApiModelProperty", apiModelPropertyText, psiField);
             }
+        }
+        if (Objects.isNull(classComment)) {
+            this.doWrite("ApiModelProperty", "io.swagger.annotations.ApiModelProperty", "@ApiModelProperty(\"\")", psiField);
         }
     }
 
