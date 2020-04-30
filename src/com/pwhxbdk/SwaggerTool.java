@@ -100,7 +100,7 @@ public class SwaggerTool extends AnAction {
         }
         PsiField[] field = psiClass.getAllFields();
         for (PsiField psiField : field) {
-            if (Objects.equals(selectionText, psiField.getName())) {
+            if (Objects.equals(selectionText, psiField.getNameIdentifier().getText())) {
                 this.generateFieldAnnotation(psiField);
                 return;
             }
@@ -257,7 +257,8 @@ public class SwaggerTool extends AnAction {
                         break;
                 }
             }
-            String apiImplicitParamText = String.format("@ApiImplicitParam(paramType = \"%s\", dataType = \"%s\", name = \"%s\", value = \"\")",paramType,dataType,psiParameter.getName());
+            String apiImplicitParamText =
+                    String.format("@ApiImplicitParam(paramType = \"%s\", dataType = \"%s\", name = \"%s\", value = \"\")",paramType,dataType,psiParameter.getNameIdentifier().getText());
             apiImplicitParamList.add(apiImplicitParamText);
         }
         if (apiImplicitParamList.size() != 0) {

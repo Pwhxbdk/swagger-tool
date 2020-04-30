@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.pwhxbdk.plugin.swagger.tool</id>
   <name>Swagger Tools</name>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <vendor>Pwhxbdk</vendor>
 
   <description><![CDATA[
@@ -11,6 +11,31 @@
       使用说明请前往github查看...<br>
       Generate swagger annotations based on doc comments of class field / methods.<br>
       For instructions, please go to github...
+      <hr>
+      <ul>
+        <li>If there is @RestController or @Controller annotation on the target class, the corresponding controller swagger annotation is generated, otherwise the model swagger annotation is generated.</li>
+        <li>You can generate specified swagger annotations by selecting the class name, field name, and method name.</li>
+        <li>The following annotation format can be automatically filled in the annotation value.</li>
+      </ul>
+      <pre>
+        <code>
+    /**
+     * test
+     * @desc test
+     * @describe test
+     * @description test
+     */
+    @ApiModelProperty("test test test test")
+    private String test1;
+
+    // test
+    @ApiModelProperty("test")
+    private String test2;
+
+    @ApiModelProperty("")
+    private String test3;
+        </code>
+      </pre>
     ]]></description>
 
   <change-notes><![CDATA[
@@ -27,6 +52,9 @@
   <!-- uncomment to enable plugin in all products
   <depends>com.intellij.modules.lang</depends>
   -->
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.java</depends>
+
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
