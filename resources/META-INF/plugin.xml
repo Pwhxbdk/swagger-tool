@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.pwhxbdk.plugin.swagger.tool</id>
   <name>Swagger Tools</name>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <vendor>Pwhxbdk</vendor>
 
   <description><![CDATA[
@@ -13,13 +13,18 @@
       For instructions, please go to github...
       <hr>
       <ul>
+        <li>如果目标类上有@RestController或@Controller注解,则生成对应controller swagger注解，否则生成model swagger注解。</li>
+        <li>可通过选中类名、字段名、方法名生成指定swagger注解。</li>
+        <li>以下注释格式可自动填充到注解value中。</li>
+      </ul>
+      <ul>
         <li>If there is @RestController or @Controller annotation on the target class, the corresponding controller swagger annotation is generated, otherwise the model swagger annotation is generated.</li>
         <li>You can generate specified swagger annotations by selecting the class name, field name, and method name.</li>
         <li>The following annotation format can be automatically filled in the annotation value.</li>
       </ul>
       <pre>
         <code>
-    /**
+/**
      * test
      * @desc test
      * @describe test
@@ -39,8 +44,8 @@
     ]]></description>
 
   <change-notes><![CDATA[
-      Head over to GitHub to see the latest change notes and learn more about this plugin.
-      Thanks for dropping by.
+      更新了@ApiOperation.httpMethod显示问题。
+      Updated @ApiOperation.httpMethod display issue.
     ]]>
   </change-notes>
 

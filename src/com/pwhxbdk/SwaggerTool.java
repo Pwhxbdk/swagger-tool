@@ -136,26 +136,32 @@ public class SwaggerTool extends AnAction {
         for (PsiAnnotation psiAnnotation : psiAnnotations) {
             switch (Objects.requireNonNull(psiAnnotation.getQualifiedName())) {
                 case REQUEST_MAPPING_ANNOTATION:
-                    return getAttribute(psiAnnotation, attributeName,null);
+                    return getAttribute(psiAnnotation, attributeName);
                 case POST_MAPPING_ANNOTATION:
-                    return getAttribute(psiAnnotation, attributeName,"post");
+                    return "POST";
                 case GET_MAPPING_ANNOTATION:
-                    return getAttribute(psiAnnotation, attributeName,"get");
+                    return "GET";
                 case DELETE_MAPPING_ANNOTATION:
-                    return getAttribute(psiAnnotation, attributeName,"delete");
+                    return "DELETE";
                 case PATCH_MAPPING_ANNOTATION:
-                    return getAttribute(psiAnnotation, attributeName,"patch");
+                    return "PATCH";
                 case PUT_MAPPING_ANNOTATION:
-                    return getAttribute(psiAnnotation, attributeName,"put");
+                    return "PUT";
                 default:break;
             }
         }
         return "";
     }
 
-    private String getAttribute(PsiAnnotation psiAnnotation, String attributeName, String method) {
-        if (Objects.equals(attributeName,MAPPING_METHOD) && StringUtils.isNotEmpty(method)) {
-            return method;
+    /**
+     * 获取注解属性
+     * @param psiAnnotation 注解全路径
+     * @param attributeName 注解属性名
+     * @return 属性值
+     */
+    private String getAttribute(PsiAnnotation psiAnnotation, String attributeName) {
+        if (Objects.isNull(psiAnnotation)) {
+            return "";
         }
         PsiAnnotationMemberValue psiAnnotationMemberValue = psiAnnotation.findDeclaredAttributeValue(attributeName);
         if (Objects.isNull(psiAnnotationMemberValue)) {
@@ -221,7 +227,11 @@ public class SwaggerTool extends AnAction {
         if (StringUtils.isNotEmpty(methodValue)) {
             methodValue = methodValue.substring(methodValue.indexOf(".")+1);
         }
-        String apiOperationAnnotationText = String.format("@ApiOperation(value = \"\", notes = \"\",httpMethod = \"%s\")", methodValue);
+        // 如果存在注解，获取注解原本的value和notes内容
+        PsiAnnotation apiOperationExist = psiMethod.getModifierList().findAnnotation("io.swagger.annotations.ApiOperation");
+        String apiOperationAttrValue = this.getAttribute(apiOperationExist,"value");
+        String apiOperationAttrNotes = this.getAttribute(apiOperationExist,"notes");
+        String apiOperationAnnotationText = String.format("@ApiOperation(value = %s, notes = %s,httpMethod = \"%s\")", apiOperationAttrValue, apiOperationAttrNotes, methodValue);
         String apiImplicitParamsAnnotationText = null;
         PsiParameter[] psiParameters = psiMethod.getParameterList().getParameters();
         List<String> apiImplicitParamList = new ArrayList<>(psiParameters.length);
