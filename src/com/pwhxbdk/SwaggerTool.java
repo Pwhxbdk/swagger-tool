@@ -10,6 +10,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiShortNamesCache;
 import com.intellij.psi.util.PsiUtilBase;
+import com.pwhxbdk.dialog.Arena;
 import com.pwhxbdk.utils.CommentUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -26,7 +27,7 @@ public class SwaggerTool extends AnAction {
 
     private static Project project = null;
     private static PsiFile psiFile = null;
-    PsiElementFactory elementFactory = null;
+    public static PsiElementFactory elementFactory = null;
     private static final String MAPPING_VALUE = "value";
     private static final String MAPPING_METHOD = "method";
     private static final String REQUEST_MAPPING_ANNOTATION = "org.springframework.web.bind.annotation.RequestMapping";
@@ -42,6 +43,7 @@ public class SwaggerTool extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
+
         // 获取当前的project对象
         project = anActionEvent.getProject();
         elementFactory = JavaPsiFacade.getElementFactory(project);
@@ -57,28 +59,31 @@ public class SwaggerTool extends AnAction {
         for (PsiElement psiElement : psiFile.getChildren()) {
             if (psiElement instanceof PsiClass){
                 PsiClass psiClass = (PsiClass) psiElement;
-                boolean isController = this.isController(psiClass);
-                if (selection) {
-                    this.generateSelection(psiClass, selectionText, isController);
-                    break;
-                }
-                // 获取注释
-                this.generateClassAnnotation(psiClass,isController);
-                if (isController) {
-                    // 类方法列表
-                    PsiMethod[] methods = psiClass.getMethods();
-                    for (PsiMethod psiMethod : methods) {
-                        this.generateMethodAnnotation(psiMethod);
-                    }
-                } else {
-                    // 类属性列表
-                    PsiField[] field = psiClass.getAllFields();
-                    for (PsiField psiField : field) {
-                        this.generateFieldAnnotation(psiField);
-                    }
-                }
+                Arena arena = new Arena(psiClass, project);
+                arena.show();
+//                boolean isController = this.isController(psiClass);
+//                if (selection) {
+//                    this.generateSelection(psiClass, selectionText, isController);
+//                    break;
+//                }
+//                // 获取注释
+//                this.generateClassAnnotation(psiClass,isController);
+//                if (isController) {
+//                    // 类方法列表
+//                    PsiMethod[] methods = psiClass.getMethods();
+//                    for (PsiMethod psiMethod : methods) {
+//                        this.generateMethodAnnotation(psiMethod);
+//                    }
+//                } else {
+//                    // 类属性列表
+//                    PsiField[] field = psiClass.getAllFields();
+//                    for (PsiField psiField : field) {
+//                        this.generateFieldAnnotation(psiField);
+//                    }
+//                }
             }
         }
+
     }
 
 
@@ -302,7 +307,6 @@ public class SwaggerTool extends AnAction {
             }
         });
     }
-
 
     /**
      * 生成属性注解

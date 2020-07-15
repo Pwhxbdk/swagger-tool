@@ -94,13 +94,15 @@ public class CommentUtils {
      * @param args
      */
     public static void main(String[] args) {
+        String aa = "@ApiModel(value=\"商务出行\",description = \"\",parent = Void.class,discriminator=\"\",subTypes = Void.class, reference = \"\")";
+        String bb = "@ApiModelProperty(value = \"单位名称\",name = \"\",allowableValues = \"\",access = \"\",notes = \"\",dataType = \"\",required = true,position = 1,hidden = true,example = \"\",accessMode = ApiModelProperty.AccessMode.AUTO, reference = \"\", allowEmptyValue = true, \n" +
+                "            extensions = {\n" +
+                "                @Extension(properties = {\n" +
+                "                        @ExtensionProperty(name = \"\",value = \"\"),\n" +
+                "                        @ExtensionProperty(name = \"\",value = \"\")\n" +
+                "                }\n" +
+                "            )})";
 
-//        System.out.println(getCommentDesc("/**\n" +
-//                " * @describe pwhxbdk\n" +
-//                " * @author pwhxbdk\n" +
-//                " * @date 2020/4/6\n" +
-//                " */"));
-//        System.out.println(StringUtils.ordinalIndexOf("*@desc fdfdfdfdf","c",1));
     }
 
 
