@@ -5,7 +5,7 @@ import com.intellij.psi.PsiMember;
 import java.util.List;
 
 /**
- * @Author: wangluming
+ * @Author: pwhxbdk
  * @Date: 2020/6/23 18:12
  */
 public class DialogInfoWrapper {
