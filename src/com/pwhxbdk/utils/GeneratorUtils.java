@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiShortNamesCache;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -33,14 +34,16 @@ public class GeneratorUtils {
 
     private final Project project;
     private final PsiFile psiFile;
+    private final PsiClass psiClass;
     private final PsiElementFactory elementFactory;
     private final String selectionText;
 
-    public GeneratorUtils(Project project, PsiFile psiFile, PsiElementFactory elementFactory, String selectionText) {
+    public GeneratorUtils(Project project, PsiFile psiFile, PsiClass psiClass, String selectionText) {
         this.project = project;
         this.psiFile = psiFile;
-        this.elementFactory = elementFactory;
+        this.psiClass = psiClass;
         this.selectionText = selectionText;
+        this.elementFactory = JavaPsiFacade.getElementFactory(project);
     }
 
     public void doGenerate() {
@@ -50,29 +53,24 @@ public class GeneratorUtils {
                 selection = true;
             }
             // 遍历当前对象的所有属性
-            for (PsiElement psiElement : psiFile.getChildren()) {
-                if (psiElement instanceof PsiClass){
-                    PsiClass psiClass = (PsiClass) psiElement;
-                    boolean isController = this.isController(psiClass);
-                    if (selection) {
-                        this.generateSelection(psiClass, selectionText, isController);
-                        break;
-                    }
-                    // 获取注释
-                    this.generateClassAnnotation(psiClass,isController);
-                    if (isController) {
-                        // 类方法列表
-                        PsiMethod[] methods = psiClass.getMethods();
-                        for (PsiMethod psiMethod : methods) {
-                            this.generateMethodAnnotation(psiMethod);
-                        }
-                    } else {
-                        // 类属性列表
-                        PsiField[] field = psiClass.getAllFields();
-                        for (PsiField psiField : field) {
-                            this.generateFieldAnnotation(psiField);
-                        }
-                    }
+            boolean isController = this.isController(psiClass);
+            if (selection) {
+                this.generateSelection(psiClass, selectionText, isController);
+                return;
+            }
+            // 获取注释
+            this.generateClassAnnotation(psiClass,isController);
+            if (isController) {
+                // 类方法列表
+                PsiMethod[] methods = psiClass.getMethods();
+                for (PsiMethod psiMethod : methods) {
+                    this.generateMethodAnnotation(psiMethod);
+                }
+            } else {
+                // 类属性列表
+                PsiField[] field = psiClass.getAllFields();
+                for (PsiField psiField : field) {
+                    this.generateFieldAnnotation(psiField);
                 }
             }
         });
@@ -211,7 +209,7 @@ public class GeneratorUtils {
                 } else {
                     annotation = "ApiModel";
                     qualifiedName = "io.swagger.annotations.ApiModel";
-                    annotationFromText = String.format("@%s(value = \"%s\")", annotation, commentDesc);
+                    annotationFromText = String.format("@%s(description = \"%s\")", annotation, commentDesc);
                 }
                 this.doWrite(annotation, qualifiedName, annotationFromText, psiClass);
             }
@@ -239,6 +237,7 @@ public class GeneratorUtils {
      * @param psiMethod 类方法元素
      */
     private void generateMethodAnnotation(PsiMethod psiMethod){
+
         PsiAnnotation[] psiAnnotations = psiMethod.getModifierList().getAnnotations();
         String methodValue = this.getMappingAttribute(psiAnnotations,MAPPING_METHOD);
         if (StringUtils.isNotEmpty(methodValue)) {
@@ -293,8 +292,8 @@ public class GeneratorUtils {
         }
 
         this.doWrite("ApiOperation", "io.swagger.annotations.ApiOperation", apiOperationAnnotationText, psiMethod);
-        this.doWrite("ApiImplicitParams", "io.swagger.annotations.ApiImplicitParams", apiImplicitParamsAnnotationText,psiMethod);
-        WriteCommandAction.runWriteCommandAction(project, () -> addImport(elementFactory, psiFile, "ApiImplicitParam"));
+        this.doWrite("ApiImplicitParams", "io.swagger.annotations.ApiImplicitParams", apiImplicitParamsAnnotationText, psiMethod);
+        addImport(elementFactory, psiFile, "ApiImplicitParam");
     }
 
     /**

@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.pwhxbdk.plugin.swagger.tool</id>
   <name>Swagger Tools</name>
-  <version>1.0.4</version>
+  <version>1.0.5</version>
   <vendor>Pwhxbdk</vendor>
 
   <description><![CDATA[
@@ -23,7 +23,8 @@
         <li>The following annotation format can be automatically filled in the annotation value.</li>
       </ul>
       <pre>
-        <code>/**
+        <code>
+    /**
      * test
      * @desc test
      * @describe test
@@ -43,8 +44,12 @@
     ]]></description>
 
   <change-notes><![CDATA[
+      修改了@ApiModel属性模板
+      Modified @ApiModel attribute template.
+      https://github.com/Pwhxbdk/swagger-tool#issue-736809321
+
       优化注解写入效率
-      Optimize annotation writing efficiency
+      Optimize annotation writing efficiency.
 
       更新了@ApiOperation.httpMethod显示问题。
       Updated @ApiOperation.httpMethod display issue.
