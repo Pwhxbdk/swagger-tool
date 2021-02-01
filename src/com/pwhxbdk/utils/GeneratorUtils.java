@@ -151,7 +151,11 @@ public class GeneratorUtils {
         for (PsiAnnotation psiAnnotation : psiAnnotations) {
             switch (Objects.requireNonNull(psiAnnotation.getQualifiedName())) {
                 case REQUEST_MAPPING_ANNOTATION:
-                    return getAttribute(psiAnnotation, attributeName);
+                    String attribute = getAttribute(psiAnnotation, attributeName);
+                    if (Objects.equals("\"\"",attribute)) {
+                        return "";
+                    }
+                    return attribute;
                 case POST_MAPPING_ANNOTATION:
                     return "POST";
                 case GET_MAPPING_ANNOTATION:
@@ -237,7 +241,6 @@ public class GeneratorUtils {
      * @param psiMethod 类方法元素
      */
     private void generateMethodAnnotation(PsiMethod psiMethod){
-
         PsiAnnotation[] psiAnnotations = psiMethod.getModifierList().getAnnotations();
         String methodValue = this.getMappingAttribute(psiAnnotations,MAPPING_METHOD);
         if (StringUtils.isNotEmpty(methodValue)) {
@@ -292,7 +295,9 @@ public class GeneratorUtils {
         }
 
         this.doWrite("ApiOperation", "io.swagger.annotations.ApiOperation", apiOperationAnnotationText, psiMethod);
-        this.doWrite("ApiImplicitParams", "io.swagger.annotations.ApiImplicitParams", apiImplicitParamsAnnotationText, psiMethod);
+        if (StringUtils.isNotEmpty(apiImplicitParamsAnnotationText)) {
+            this.doWrite("ApiImplicitParams", "io.swagger.annotations.ApiImplicitParams", apiImplicitParamsAnnotationText, psiMethod);
+        }
         addImport(elementFactory, psiFile, "ApiImplicitParam");
     }
 

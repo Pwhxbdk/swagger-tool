@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.pwhxbdk.plugin.swagger.tool</id>
   <name>Swagger Tools</name>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
   <vendor>Pwhxbdk</vendor>
 
   <description><![CDATA[
@@ -23,7 +23,6 @@
         <li>The following annotation format can be automatically filled in the annotation value.</li>
       </ul>
       <pre>
-        <code>
     /**
      * test
      * @desc test
@@ -39,20 +38,38 @@
 
     @ApiModelProperty("")
     private String test3;
-        </code>
       </pre>
     ]]></description>
 
   <change-notes><![CDATA[
-      修改了@ApiModel属性模板
-      Modified @ApiModel attribute template.
-      https://github.com/Pwhxbdk/swagger-tool#issue-736809321
+    <ul>
 
-      优化注解写入效率
-      Optimize annotation writing efficiency.
+    <li>
+      <p>修改了一个自己发现的小bug。</p>
+    </li>
 
-      更新了@ApiOperation.httpMethod显示问题。
-      Updated @ApiOperation.httpMethod display issue.
+    <li>
+      <p>修改了Controller无参方法注解生成问题。</p>
+      <p>Modified the comment generation problem of Controller no-parameter method.</p>
+      <p>https://github.com/Pwhxbdk/swagger-tool/issues/2#issue-778735762</p>
+    </li>
+
+    <li>
+      <p>修改了@ApiModel属性模板。</p>
+      <p>Modified @ApiModel attribute template.</p>
+      <p>https://github.com/Pwhxbdk/swagger-tool/issues/1#issue-736809321</p>
+    </li>
+
+    <li>
+      <p>优化注解写入效率。</p>
+      <p>Optimize annotation writing efficiency.</p>
+    </li>
+
+    <li>
+      <p>更新了@ApiOperation.httpMethod显示问题。</p>
+      <p>Updated @ApiOperation.httpMethod display issue.</p>
+    </li>
+    </ul>
     ]]>
   </change-notes>
 
