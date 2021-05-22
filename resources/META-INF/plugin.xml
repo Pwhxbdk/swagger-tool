@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.pwhxbdk.plugin.swagger.tool</id>
   <name>Swagger Tools</name>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
   <vendor>Pwhxbdk</vendor>
 
   <description><![CDATA[
@@ -45,7 +45,16 @@
     <ul>
 
     <li>
-      <p>修改了一个自己发现的小bug。</p>
+      <p>@ApiOperation属性value现在会根据javadoc自动填充了</p>
+      <p>@ApiImplicitParam属性value也会根据javadoc @param自动填充</p>
+      <p>新增logo</p>
+      <p>@ApiOperation attribute value will now be automatically filled according to javadoc</p>
+      <p>@ApiImplicitParam attribute value will also be automatically filled according to javadoc @param</p>
+      <p>Add logo</p>
+    </li>
+
+    <li>
+      <p>修改了一个小bug。</p>
     </li>
 
     <li>

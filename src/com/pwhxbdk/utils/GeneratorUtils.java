@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -151,7 +152,7 @@ public class GeneratorUtils {
         for (PsiAnnotation psiAnnotation : psiAnnotations) {
             switch (Objects.requireNonNull(psiAnnotation.getQualifiedName())) {
                 case REQUEST_MAPPING_ANNOTATION:
-                    String attribute = getAttribute(psiAnnotation, attributeName);
+                    String attribute = getAttribute(psiAnnotation, attributeName, "");
                     if (Objects.equals("\"\"",attribute)) {
                         return "";
                     }
@@ -178,13 +179,13 @@ public class GeneratorUtils {
      * @param attributeName 注解属性名
      * @return 属性值
      */
-    private String getAttribute(PsiAnnotation psiAnnotation, String attributeName) {
+    private String getAttribute(PsiAnnotation psiAnnotation, String attributeName, String comment) {
         if (Objects.isNull(psiAnnotation)) {
-            return "\"\"";
+            return "\"" + comment + "\"";
         }
         PsiAnnotationMemberValue psiAnnotationMemberValue = psiAnnotation.findDeclaredAttributeValue(attributeName);
         if (Objects.isNull(psiAnnotationMemberValue)) {
-            return "\"\"";
+            return "\"" + comment + "\"";
         }
         return psiAnnotationMemberValue.getText();
     }
@@ -208,7 +209,7 @@ public class GeneratorUtils {
                 if (isController) {
                     annotation = "Api";
                     qualifiedName = "io.swagger.annotations.Api";
-                    String fieldValue = this.getMappingAttribute(psiClass.getModifierList().getAnnotations(),MAPPING_VALUE);
+                    String fieldValue = this.getMappingAttribute(psiClass.getModifierList().getAnnotations(), MAPPING_VALUE);
                     annotationFromText = String.format("@%s(value = %s, tags = {\"%s\"})",annotation,fieldValue,commentDesc);
                 } else {
                     annotation = "ApiModel";
@@ -225,7 +226,7 @@ public class GeneratorUtils {
             if (isController) {
                 annotation = "Api";
                 qualifiedName = "io.swagger.annotations.Api";
-                String fieldValue = this.getMappingAttribute(psiClass.getModifierList().getAnnotations(),MAPPING_VALUE);
+                String fieldValue = this.getMappingAttribute(psiClass.getModifierList().getAnnotations(), MAPPING_VALUE);
                 annotationFromText = String.format("@%s(value = %s)",annotation,fieldValue);
             } else {
                 annotation = "ApiModel";
@@ -241,30 +242,40 @@ public class GeneratorUtils {
      * @param psiMethod 类方法元素
      */
     private void generateMethodAnnotation(PsiMethod psiMethod){
-        PsiAnnotation[] psiAnnotations = psiMethod.getModifierList().getAnnotations();
-        String methodValue = this.getMappingAttribute(psiAnnotations,MAPPING_METHOD);
-        if (StringUtils.isNotEmpty(methodValue)) {
-            methodValue = methodValue.substring(methodValue.indexOf(".")+1);
+        String commentDesc = "";
+        Map<String, String> methodParamCommentDesc = null;
+        for (PsiElement tmpEle : psiMethod.getChildren()) {
+            if (tmpEle instanceof PsiComment) {
+                PsiComment classComment = (PsiComment) tmpEle;
+                // 注释的内容
+                String tmpText = classComment.getText();
+                methodParamCommentDesc = CommentUtils.getCommentMethodParam(tmpText);
+                commentDesc = CommentUtils.getCommentDesc(tmpText);
+            }
         }
+
+        PsiAnnotation[] psiAnnotations = psiMethod.getModifierList().getAnnotations();
+        String methodValue = this.getMappingAttribute(psiAnnotations, MAPPING_METHOD);
+
         // 如果存在注解，获取注解原本的value和notes内容
         PsiAnnotation apiOperationExist = psiMethod.getModifierList().findAnnotation("io.swagger.annotations.ApiOperation");
-        String apiOperationAttrValue = this.getAttribute(apiOperationExist,"value");
-        String apiOperationAttrNotes = this.getAttribute(apiOperationExist,"notes");
-        String apiOperationAnnotationText = String.format("@ApiOperation(value = %s, notes = %s,httpMethod = \"%s\")", apiOperationAttrValue, apiOperationAttrNotes, methodValue);
+        String apiOperationAttrValue = this.getAttribute(apiOperationExist,"value", commentDesc);
+        String apiOperationAttrNotes = this.getAttribute(apiOperationExist,"notes", commentDesc);
+        String apiOperationAnnotationText;
+        if (StringUtils.isNotEmpty(methodValue)) {
+            methodValue = methodValue.substring(methodValue.indexOf(".") + 1);
+            apiOperationAnnotationText = String.format("@ApiOperation(value = %s, notes = %s, httpMethod = \"%s\")", apiOperationAttrValue, apiOperationAttrNotes, methodValue);
+        } else {
+            apiOperationAnnotationText = String.format("@ApiOperation(value = %s, notes = %s)", apiOperationAttrValue, apiOperationAttrNotes);
+        }
+
         String apiImplicitParamsAnnotationText = null;
         PsiParameter[] psiParameters = psiMethod.getParameterList().getParameters();
         List<String> apiImplicitParamList = new ArrayList<>(psiParameters.length);
         for (PsiParameter psiParameter : psiParameters) {
             PsiType psiType = psiParameter.getType();
             String dataType = CommentUtils.getDataType(psiType.getCanonicalText(), psiType);
-            if (StringUtils.isEmpty(dataType)) {
-                continue;
-            }
             String paramType = "query";
-            if (Objects.equals(dataType,"file")) {
-                paramType = "form";
-            }
-
             for (PsiAnnotation psiAnnotation : psiParameter.getModifierList().getAnnotations()) {
                 if (StringUtils.isEmpty(psiAnnotation.getQualifiedName())) {
                     break;
@@ -286,8 +297,18 @@ public class GeneratorUtils {
                         break;
                 }
             }
+            if (Objects.equals(dataType,"file")) {
+                paramType = "form";
+            }
+            String paramDesc = "";
+            if (methodParamCommentDesc != null) {
+                paramDesc = methodParamCommentDesc.get(psiParameter.getNameIdentifier().getText());
+            }
             String apiImplicitParamText =
-                    String.format("@ApiImplicitParam(paramType = \"%s\", dataType = \"%s\", name = \"%s\", value = \"\")",paramType,dataType,psiParameter.getNameIdentifier().getText());
+                    String.format("@ApiImplicitParam(paramType = \"%s\", dataType = \"%s\", name = \"%s\", value = \"%s\")",
+                            paramType, dataType, psiParameter.getNameIdentifier().getText(), paramDesc == null ? "" : paramDesc);
+//            String apiImplicitParamText =
+//                    String.format("@ApiImplicitParam(paramType = \"%s\", dataType = \"%s\", name = \"%s\", value = \"\", required = %s)",paramType, dataType, psiParameter.getNameIdentifier().getText());
             apiImplicitParamList.add(apiImplicitParamText);
         }
         if (apiImplicitParamList.size() != 0) {
