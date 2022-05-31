@@ -60,7 +60,7 @@ public class GeneratorUtils {
                 return;
             }
             // 获取注释
-            this.generateClassAnnotation(psiClass,isController);
+            this.generateClassAnnotation(psiClass, isController);
             if (isController) {
                 // 类方法列表
                 PsiMethod[] methods = psiClass.getMethods();
@@ -68,6 +68,17 @@ public class GeneratorUtils {
                     this.generateMethodAnnotation(psiMethod);
                 }
             } else {
+                PsiClass[] innerClasses = psiClass.getInnerClasses();
+                if (innerClasses.length > 0) {
+                    for (PsiClass innerClass : innerClasses) {
+                        this.generateClassAnnotation(innerClass, false);
+                        // 类属性列表
+                        PsiField[] field = innerClass.getAllFields();
+                        for (PsiField psiField : field) {
+                            this.generateFieldAnnotation(psiField);
+                        }
+                    }
+                }
                 // 类属性列表
                 PsiField[] field = psiClass.getAllFields();
                 for (PsiField psiField : field) {

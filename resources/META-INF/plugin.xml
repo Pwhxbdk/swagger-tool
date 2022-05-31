@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.pwhxbdk.plugin.swagger.tool</id>
   <name>Swagger Tools</name>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
   <vendor>Pwhxbdk</vendor>
 
   <description><![CDATA[
@@ -43,6 +43,11 @@
 
   <change-notes><![CDATA[
     <ul>
+
+    <li>
+      <p>支持Model内部类</p>
+      <p>Support for Model inner classes</p>
+    </li>
 
     <li>
       <p>@ApiOperation属性value现在会根据javadoc自动填充了</p>
@@ -101,7 +106,7 @@
   <actions>
     <!-- Add your actions here -->
     <action id="com.pwhxbdk.SwaggerTool" class="com.pwhxbdk.SwaggerTool" text="SwaggerAnnotation"
-            description="generate swagger annotation">
+            description="Generate swagger annotation">
       <add-to-group group-id="GenerateGroup" anchor="first"/>
     </action>
   </actions>
